@@ -17,7 +17,7 @@
 
     <script>
         // ==========================================
-        // ⚠️ 1. 系統連結 (維持 sorryxx24 版本)
+        // ⚠️ 1. 系統連結 (sorryxx24)
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxB06TURmbo4QW7ecb5OprxEF3mnJGve_Qkq64qvcyKTS0d4__4kmpzxFvJ9T6Cw0jKuQ/exec";
         
         // ⚠️ 2. 系統整合連結
@@ -38,40 +38,51 @@
         #table1 { min-width: 2000px; } #table2 { min-width: 1800px; } #table3 { min-width: 1400px; }
         
         /* 
-           [螢幕顯示] 使用 max-content 自動撐開，確保日期對齊
+           【絕對鎖定】甘特圖總寬度 
+           計算式: 300(名) + 930(日) + 32(邊框) = 1262px 
+           這裡給 1265px 確保不換行。
         */
-        #table4 { width: max-content !important; min-width: 1230px; } 
+        #table4 { width: 1265px !important; min-width: 1265px !important; table-layout: fixed !important; } 
 
         /* 儲存格設定 */
         th { background-color: #f8fafc; color: #334155; font-weight: 700; border: 1px solid #cbd5e1; position: sticky; top: 0; z-index: 10; height: 45px; padding: 4px; box-sizing: border-box; white-space: nowrap; }
         td { border: 1px solid #cbd5e1; height: auto; min-height: 38px; background: white; position: relative; box-sizing: border-box; padding: 0; vertical-align: middle; }
         
-        /* 輸入框設定 */
         input[type="text"], input[type="number"] { width: 100%; height: 38px; border: none; outline: none; background: transparent; text-align: center; font-family: inherit; font-size: 13px; display: block; color: #334155; }
         input[type="text"]:focus, input[type="number"]:focus { background: #eff6ff; box-shadow: inset 0 0 0 2px #3b82f6; }
         textarea { width: 100%; min-height: 38px; height: 100%; border: none; resize: none; outline: none; background: transparent; font-family: inherit; font-size: 13px; text-align: left; padding: 8px; box-sizing: border-box; white-space: pre-wrap; overflow: hidden; display: block; line-height: 1.4; }
         textarea:focus { background: #eff6ff; box-shadow: inset 0 0 0 2px #3b82f6; }
 
-        /* --- 甘特圖關鍵修正 CSS --- */
+        /* --- 甘特圖暴力對齊 CSS (全部歸零，統一邊框) --- */
+        
+        /* 名稱欄：鎖死 300px */
         .col-fix-name { 
             width: 300px !important; min-width: 300px; max-width: 300px; 
             white-space: normal; word-break: break-all; line-height: 1.3; 
-            box-sizing: border-box; padding: 8px;
+            box-sizing: border-box; padding: 5px;
             border-right: 1px solid #000 !important; 
             border-bottom: 1px solid #000 !important;
             vertical-align: middle !important;
             background: #fff;
         }
         
-        .col-fix-day { width: 30px !important; min-width: 30px; max-width: 30px; text-align: center; box-sizing: border-box; }
+        /* 日期欄：鎖死 30px，並且把 padding 殺掉 */
+        .col-fix-day { 
+            width: 30px !important; min-width: 30px; max-width: 30px; 
+            text-align: center; box-sizing: border-box;
+            padding: 0 !important; /* 關鍵：強制歸零 */
+        }
         
-        /* [修正] 移除甘特圖標頭的 Padding，確保跟下方內容完全對齊 */
-        #ganttHeader th.col-fix-day { padding: 0 !important; }
-        .gantt-data-row td.col-fix-day { padding: 0 !important; }
+        /* 確保標題列跟內容列的日期格完全一樣 */
+        #ganttHeader th.col-fix-day { border: 1px solid #000 !important; }
+        .gantt-data-row td.col-fix-day { border: 1px solid #000 !important; }
 
+        /* 高度一致性 */
         .gantt-visual-row, .gantt-data-row { height: 28px; line-height: 28px; }
         .gantt-cell-bar { border-bottom: none; height: 28px; } 
-        .gantt-num { border-top: none; font-weight: bold; color: #000; font-size: 12px; height: 28px; }
+        .gantt-num { border-top: none; font-weight: bold; color: #000; font-size: 12px; height: 28px; line-height: 28px; }
+        
+        /* 樣式 */
         .weekend { background-color: #f3f4f6; }
         .bar-active { background-color: #3b82f6 !important; border-color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         
@@ -100,11 +111,7 @@
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* 
-           [修正] 列印/PDF 設定
-           改回 36cm !important (參考您提供的下載成功版本)
-           這能解決下載失效的問題。
-        */
+        /* 列印/PDF 專用：強制跟螢幕設定一模一樣 */
         @media print {
             @page { size: A3 landscape; margin: 5mm; }
             body { background: white; height: auto; overflow: visible; display: block !important; }
@@ -112,10 +119,11 @@
             .main-content, .workspace, .view-section, .table-container { width: 100%; height: auto; overflow: visible; display: block; padding: 0; margin: 0; border: none; box-shadow: none; }
             .view-section { display: none; } .view-section.active { display: block; }
             
-            #table4 { width: 36cm !important; min-width: 36cm !important; max-width: 36cm !important; }
+            /* PDF 引擎需要這個寬度 */
+            #table4 { width: 1265px !important; min-width: 1265px !important; max-width: 1265px !important; }
             
-            .col-fix-name { width: 8cm !important; min-width: 8cm !important; }
-            .col-fix-day { width: 0.9cm !important; min-width: 0.9cm !important; padding: 0 !important; }
+            .col-fix-name { width: 300px !important; min-width: 300px !important; }
+            .col-fix-day { width: 30px !important; min-width: 30px !important; padding: 0 !important; }
             table, th, td { border: 1px solid #000 !important; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
@@ -580,26 +588,41 @@
         // [PDF 下載功能]
         function downloadPDF() {
             const element = document.getElementById('ganttExportArea');
+            // 這裡是一個小技巧：暫時移除 container 的捲軸與寬度限制，
+            // 讓 html2pdf 能截取到完整表格
+            const container = document.querySelector('.table-container');
+            const originalOverflow = container.style.overflow;
+            const originalWidth = container.style.width;
             
-            // 調整參數：scale 設為 1.5 可避免過大導致記憶體問題，同時確保清晰
+            // 暫時強制展開，確保截圖完整
+            container.style.overflow = 'visible';
+            container.style.width = '1265px'; // 強制對應表格寬度
+
             const opt = {
                 margin: 5,
                 filename: '甘特圖報表.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 1.5, scrollY: 0, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+                html2canvas: { scale: 2, scrollY: 0, useCORS: true, width: 1265 }, // 明確指定 canvas 寬度
+                jsPDF: { unit: 'pt', format: 'a3', orientation: 'landscape' } // 使用 pt 單位更精準
             };
             
             showLoading(true, "正在產生 PDF...");
             
             html2pdf().set(opt).from(element).save()
                 .then(() => {
+                    // 還原樣式
+                    container.style.overflow = originalOverflow;
+                    container.style.width = originalWidth;
+                    
                     for(let m=1;m<=12;m++){let tb=document.getElementById(`month-${m}`);if(tb)tb.style.display='table-header-group';}
                     showLoading(false);
                 })
                 .catch(err => {
                     console.error(err);
                     alert("PDF 產生失敗，請稍後再試");
+                    // 還原樣式
+                    container.style.overflow = originalOverflow;
+                    container.style.width = originalWidth;
                     showLoading(false);
                 });
         }
@@ -623,7 +646,6 @@
                     for(let i=1;i<=31;i++) { 
                         if(r.ds.includes(i)){ 
                             dVis.push(""); 
-                            // 修正 Excel 輸出邏輯，確保 0 也顯示
                             let vShow = "";
                             if (r.v !== '' && r.v != null && (parseInt(r.v) > 0 || r.v == '0' || r.v === 0)) {
                                 vShow = parseInt(r.v);
