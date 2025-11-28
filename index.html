@@ -58,26 +58,6 @@
 
         #table2 {
             min-width: 1800px;
-        }
-
-        #table3 {
-            min-width: 1400px;
-        }
-
-        /* 
-           【絕對鎖定】甘特圖總寬度 
-           計算式: 300(名) + 930(日) + 32(邊框) = 1262px 
-           這裡給 1265px 確保不換行。
-        */
-        #table4 {
-            width: 1265px !important;
-            min-width: 1265px !important;
-            table-layout: fixed !important;
-        }
-
-        /* 儲存格設定 */
-        th {
-            background-color: #f8fafc;
             color: #334155;
             font-weight: 700;
             border: 1px solid #cbd5e1;
@@ -933,35 +913,6 @@
             }
         }
 
-        function parseDateStr(str, excludeList) {
-            let results = []; if (!str) return results;
-            try {
-                let s = str.replace(/（.*?）/g, '').replace(/\(.*?\)/g, '').trim();
-                let parts = s.split(/[,、]/);
-                parts.forEach(part => {
-                    part = part.trim();
-                    let cross = part.match(/(\d+)\/(\d+)\s*-\s*(\d+)\/(\d+)/);
-                    if (cross) {
-                        let m1 = +cross[1], d1 = +cross[2], m2 = +cross[3], d2 = +cross[4];
-                        let cur = new Date(2025, m1 - 1, d1), end = new Date(2025, m2 - 1, d2);
-                        while (cur <= end) { results.push({ m: cur.getMonth() + 1, d: cur.getDate() }); cur.setDate(cur.getDate() + 1); }
-                        return;
-                    }
-                    let rng = part.match(/(\d+)\/(\d+)\s*-\s*(\d+)/);
-                    if (rng) { let m = +rng[1], d1 = +rng[2], d2 = +rng[3]; for (let i = d1; i <= d2; i++) results.push({ m: m, d: i }); return; }
-                    let sgl = part.match(/(\d+)\/(\d+)/);
-                    if (sgl) { results.push({ m: +sgl[1], d: +sgl[2] }); }
-                });
-                if (excludeList && excludeList.length > 0) results = results.filter(o => !excludeList.includes(o.d));
-            } catch (e) { console.error(e); }
-            return results;
-        }
-
-        function delRow(t, i) { let arr = t == 1 ? d1 : t == 2 ? d2 : d3; if (arr[i].isNew) { arr.splice(i, 1); renderAll(); } else { if (prompt("輸入密碼 (119) 刪除:") === "119") { arr.splice(i, 1); renderAll(); } } }
-        function addRow(t) { let o = { isNew: true, ex: [], date: '' }; if (t == 1) d1.push({ ...o, m: '', mp: 0 }); if (t == 2) d2.push({ ...o, m: '', inst: 0 }); if (t == 3) d3.push({ ...o, unit: '', mp: 0 }); renderAll(); }
-        function downloadCSVTemplate() { let c = "\uFEFF"; if (currentTab == 1) c += "月份,承辦單位,課程名稱,訓練對象,課程日期,上課地點,梯數,每梯人數,每天時數,每梯時數,預計調用人數,是否提供宜基北桃參訓,新北,基隆,桃園,宜蘭,備註\n"; if (currentTab == 2) c += "月份,承辦單位,課程名稱,訓練對象,課程日期,訓練地點,梯數,每梯人數,每天時數,每梯時數,調用教官人數,是否提供跨縣市,備註\n"; if (currentTab == 3) c += "承辦單位,重大活動演習名稱,參加對象,日期,天數,時數,每日調用外勤人數,地點\n"; saveAs(new Blob([c], { type: 'text/csv;charset=utf-8;' }), `範本_附件${currentTab}.csv`); }
-        function processCSV(inp) { if (!inp.files[0]) return; Papa.parse(inp.files[0], { complete: function (res) { if (res.data.length < 2) return alert("無資料"); let target = currentTab == 1 ? d1 : currentTab == 2 ? d2 : d3; res.data.forEach((r, i) => { if (i == 0 || r.length < 3) return; let o = { isNew: true, ex: [] }; if (currentTab == 1) { o.m = r[0]; o.unit = r[1]; o.name = r[2]; o.target = r[3]; o.date = r[4]; o.loc = r[5]; o.batch = r[6]; o.pb = r[7]; o.dh = r[8]; o.bh = r[9]; o.mp = r[10]; o.ext = (r[11] == '是'); o.nt = r[12]; o.kl = r[13]; o.ty = r[14]; o.yl = r[15]; o.note = r[16]; } else if (currentTab == 2) { o.m = r[0]; o.unit = r[1]; o.name = r[2]; o.target = r[3]; o.date = r[4]; o.loc = r[5]; o.batch = r[6]; o.pb = r[7]; o.dh = r[8]; o.bh = r[9]; o.inst = r[10]; o.ext = (r[11] == '是'); o.note = r[12]; } else { o.unit = r[0]; o.name = r[1]; o.target = r[2]; o.date = r[3]; o.days = r[4]; o.hours = r[5]; o.mp = r[6]; o.loc = r[7]; } target.push(o); }); renderAll(); alert("匯入完成，請按儲存"); } }); inp.value = ''; }
-
         // [新增] 全域變數
         let currentEdit = null;
         let selectedDates = new Set();
@@ -1203,20 +1154,20 @@
                 for (let m = 1; m <= 12; m++) {
                     const tb = document.getElementById(`month-${m}`);
                     if (tb) {
-                        if (selectedMonths.includes(m)) tb.style.display = 'table-header-group'; // 或 table-row-group
+                        if (selectedMonths.includes(m)) tb.style.display = 'table-header-group';
                         else tb.style.display = 'none';
                     }
                 }
             }
 
             container.style.overflow = 'visible';
-            container.style.width = '1265px';
+            container.style.width = '1232px';
 
             const opt = {
                 margin: 5,
                 filename: '甘特圖報表.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, scrollY: 0, useCORS: true, width: 1265 },
+                html2canvas: { scale: 2, scrollY: 0, useCORS: true, width: 1232 },
                 jsPDF: { unit: 'pt', format: 'a3', orientation: 'landscape' }
             };
 
@@ -1240,7 +1191,7 @@
                 });
         }
 
-        // [Excel 下載功能] (保持原樣，但確保被正確呼叫)
+        // [Excel 下載功能]
         async function exportExcelJS(selM) {
             const wb = new ExcelJS.Workbook(); const sh = wb.addWorksheet('甘特圖');
             sh.getColumn(1).width = 50; for (let k = 2; k <= 32; k++) sh.getColumn(k).width = 4;
