@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>訓練流路管理系統</title>
     
-    <!-- 核心工具庫 (Excel, PDF, CSV 處理) -->
+    <!-- 核心工具庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- 視覺框架 (Tailwind CSS + Remix Icon) -->
+    <!-- 視覺框架 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <script>
         // ==========================================
-        // ⚠️ 1. 請填入您的流路管理 GAS 網址 (與網站1不同)
+        // ⚠️ 1. 請填入您的流路管理 GAS 網址
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxB06TURmbo4QW7ecb5OprxEF3mnJGve_Qkq64qvcyKTS0d4__4kmpzxFvJ9T6Cw0jKuQ/exec";
         
         // ⚠️ 2. 系統整合連結
@@ -27,40 +27,34 @@
     </script>
 
     <style>
-        /* 字體設定 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
         body { font-family: 'Inter', 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
 
-        /* --- 表格核心樣式 --- */
         .table-container { overflow-x: auto; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; }
         
-        /* 表格結構設定 */
+        /* 表格設定 */
         table { border-collapse: collapse; font-size: 13px; table-layout: fixed; width: auto; border-spacing: 0; }
         #table1 { min-width: 2000px; } #table2 { min-width: 1800px; } #table3 { min-width: 1400px; }
         
-        /* 甘特圖寬度設定：維持 max-content 以確保有足夠空間 */
+        /* [修改 1] 解放甘特圖寬度，解決格子擠壓問題 */
         #table4 { width: max-content !important; min-width: 1230px; } 
 
-        /* 表頭與儲存格 */
         th { background-color: #f8fafc; color: #334155; font-weight: 700; border: 1px solid #cbd5e1; position: sticky; top: 0; z-index: 10; height: 45px; padding: 4px; box-sizing: border-box; white-space: nowrap; }
         td { border: 1px solid #cbd5e1; height: auto; min-height: 38px; background: white; position: relative; box-sizing: border-box; padding: 0; vertical-align: middle; }
         
-        /* 輸入框美化 */
         input[type="text"], input[type="number"] { width: 100%; height: 38px; border: none; outline: none; background: transparent; text-align: center; font-family: inherit; font-size: 13px; display: block; color: #334155; }
         input[type="text"]:focus, input[type="number"]:focus { background: #eff6ff; box-shadow: inset 0 0 0 2px #3b82f6; }
         textarea { width: 100%; min-height: 38px; height: 100%; border: none; resize: none; outline: none; background: transparent; font-family: inherit; font-size: 13px; text-align: left; padding: 8px; box-sizing: border-box; white-space: pre-wrap; overflow: hidden; display: block; line-height: 1.4; }
         textarea:focus { background: #eff6ff; box-shadow: inset 0 0 0 2px #3b82f6; }
 
-        /* 
-           ===== 修改重點：甘特圖專用樣式 (統一邊框粗細) ===== 
-           原本有 2px, 3px 的邊框，現在全部改為 1px solid #000
-           這能確保 PDF 和網頁渲染時，不會因為線條寬度差異導致像素錯位。
-        */
+        /* [修改 2] 甘特圖樣式優化：統一邊框粗細 (解決對齊問題) */
         .col-fix-name { 
             width: 300px !important; min-width: 300px; max-width: 300px; 
             white-space: normal; word-break: break-all; line-height: 1.3; 
-            box-sizing: border-box; padding: 5px; vertical-align: middle; 
-            border-right: 1px solid #000 !important; /* 修改：2px -> 1px */
+            box-sizing: border-box; padding: 8px; /* 增加內距 */
+            border-right: 1px solid #000 !important; /* 統一為 1px */
+            border-bottom: 1px solid #000 !important;
+            vertical-align: middle !important; /* 垂直置中 */
         }
         
         .col-fix-day { width: 30px !important; min-width: 30px; max-width: 30px; text-align: center; padding: 0 !important; box-sizing: border-box; }
@@ -69,23 +63,10 @@
         .weekend { background-color: #f3f4f6; }
         .bar-active { background-color: #3b82f6 !important; border-color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         
-        tbody.gantt-month-group { 
-            break-inside: avoid; page-break-inside: avoid; 
-            border-bottom: 1px solid #000; /* 修改：3px -> 1px */
-        }
-        
-        .gantt-month-header td { 
-            background: #e2e8f0; font-weight: bold; padding-left: 15px; 
-            border: 1px solid #000; /* 修改：2px -> 1px */
-            font-size: 14px; height: 32px; 
-        }
-        
-        .stats-row td { 
-            background-color: #f8fafc; 
-            border: 1px solid #000; /* 修改：2px -> 1px */
-            color: #1e40af; font-weight: bold; text-align: center; 
-        }
-        /* ===== 修改結束 ===== */
+        /* 統一邊框為 1px */
+        tbody.gantt-month-group { break-inside: avoid; page-break-inside: avoid; border-bottom: 1px solid #000; }
+        .gantt-month-header td { background: #e2e8f0; font-weight: bold; padding-left: 15px; border: 1px solid #000; font-size: 14px; height: 32px; }
+        .stats-row td { background-color: #f8fafc; border: 1px solid #000; color: #1e40af; font-weight: bold; text-align: center; }
 
         /* 功能元件樣式 */
         .date-cell { display: flex; align-items: center; height: 100%; } .date-cell input { flex: 1; }
@@ -104,12 +85,10 @@
         .month-select-btn:hover { background: #f1f5f9; }
         .month-select-btn.selected { background: #3b82f6; color: white; border-color: #2563eb; }
 
-        /* Loading 遮罩 */
         #loading { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; display: none; justify-content: center; align-items: center; color: white; flex-direction: column; font-size: 16px; backdrop-filter: blur(4px); }
         .spinner { width: 40px; height: 40px; border: 4px solid #fff; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* --- A3 列印專用設定 (保持原樣以確保列印正確) --- */
         @media print {
             @page { size: A3 landscape; margin: 5mm; }
             body { background: white; height: auto; overflow: visible; display: block !important; }
@@ -126,10 +105,8 @@
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex selection:bg-blue-500 selection:text-white">
 
-    <!-- Loading 畫面 -->
     <div id="loading"><div class="spinner"></div><div id="loadText">處理中...</div></div>
 
-    <!-- 1. 日期選擇 Modal -->
     <div id="dateModal" class="fixed inset-0 bg-black/50 hidden z-[2000] justify-center items-center backdrop-blur-sm">
         <div class="bg-white w-[90%] max-w-[420px] p-6 rounded-2xl shadow-2xl">
             <h3 class="font-bold text-lg mb-2 text-slate-800">排除日期</h3>
@@ -148,7 +125,6 @@
         </div>
     </div>
 
-    <!-- 2. 列印月份選擇 Modal -->
     <div id="printModal" class="fixed inset-0 bg-black/50 hidden z-[2000] justify-center items-center backdrop-blur-sm">
         <div class="bg-white w-[90%] max-w-[420px] p-6 rounded-2xl shadow-2xl">
             <h3 class="font-bold text-lg mb-2 text-slate-800">請選擇輸出月份</h3>
@@ -164,7 +140,6 @@
         </div>
     </div>
 
-    <!-- Sidebar (UI 核心：統一風格) -->
     <aside id="sidebar" class="w-64 bg-slate-900 text-white hidden md:flex flex-col shadow-2xl z-30 transition-all duration-300">
         <div class="p-6 border-b border-slate-800 flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
@@ -191,7 +166,6 @@
             </div>
         </nav>
 
-        <!-- 系統切換區 -->
         <div class="p-4 border-t border-slate-800 space-y-2 bg-slate-900">
             <div class="text-[10px] text-slate-500 font-bold px-4 mb-1 uppercase tracking-wider">系統切換</div>
             <a href="javascript:void(0)" onclick="location.href=OTHER_SYSTEM_URL" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-sm">
@@ -203,10 +177,8 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-100">
         
-        <!-- Top Bar (Mobile) -->
         <div class="mobile-header bg-white md:hidden h-14 flex items-center justify-between px-4 shadow-sm border-b border-slate-200 z-20">
             <div class="flex items-center gap-3">
                 <button onclick="toggleMobileSidebar()" class="text-slate-600 p-2">
@@ -217,20 +189,15 @@
             <a href="javascript:void(0)" onclick="location.href=PORTAL_URL" class="text-slate-400 hover:text-blue-600"><i class="ri-home-4-line text-xl"></i></a>
         </div>
 
-        <!-- Toolbar Area -->
         <div id="toolbar-container" class="bg-white px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm z-10">
             <div class="text-lg font-bold text-slate-800 hidden md:flex items-center gap-2" id="pageTitle">
                 <span class="w-2 h-6 bg-blue-600 rounded-full"></span>
                 附件1 - 消防人員
             </div>
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0" id="toolbar">
-                <!-- Javascript will populate this -->
-            </div>
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0" id="toolbar"></div>
         </div>
 
         <div class="flex-1 overflow-hidden p-4 relative">
-            
-            <!-- View 1: 消防人員 -->
             <div id="view1" class="view-section h-full flex flex-col">
                 <div class="table-container flex-1 mb-4">
                     <table id="table1">
@@ -267,7 +234,6 @@
                 </button>
             </div>
             
-            <!-- View 2: 非消防人員 -->
             <div id="view2" class="view-section hidden h-full flex flex-col">
                 <div class="table-container flex-1 mb-4">
                     <table id="table2">
@@ -300,7 +266,6 @@
                 </button>
             </div>
 
-            <!-- View 3: 重大活動 -->
             <div id="view3" class="view-section hidden h-full flex flex-col">
                 <div class="table-container flex-1 mb-4">
                     <table id="table3">
@@ -326,7 +291,6 @@
                 </button>
             </div>
 
-            <!-- View 4: 甘特圖 -->
             <div id="view4" class="view-section hidden h-full flex flex-col">
                 <div class="bg-amber-50 text-amber-800 px-4 py-3 rounded-xl border border-amber-200 text-sm mb-4 flex items-center gap-2 shadow-sm">
                     <i class="ri-error-warning-fill text-lg text-amber-500"></i> 
@@ -346,7 +310,6 @@
 
     <input type="file" id="csvInput" accept=".csv" style="display:none" onchange="processCSV(this)">
 
-    <!-- Javascript 邏輯 -->
     <script>
         const $ = (s) => document.querySelector(s);
         let d1 = [{m:'1', unit:'', name:'', date:'', mp:0, ex:[], isNew:true}];
@@ -354,7 +317,6 @@
         let d3 = [{unit:'', name:'', date:'', mp:0, ex:[], isNew:true}];
         let currentTab = 1; let printActionType = '';
 
-        // 手機版側邊欄切換
         function toggleMobileSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('hidden');
@@ -404,7 +366,6 @@
         function updateToolbar() {
             const bar = document.getElementById('toolbar');
             let html = '';
-            // Tailwind 按鈕樣式
             const btnBase = "px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition whitespace-nowrap";
             const btnLight = `${btnBase} bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-600`;
             const btnDark = `${btnBase} bg-slate-900 text-white hover:bg-slate-800 shadow-lg`;
@@ -427,7 +388,6 @@
 
         function renderAll(){ renderT1(); renderT2(); renderT3(); }
 
-        // --- Render Functions (Updated with Tailwind Icons) ---
         function renderT1(){
             const tb=document.getElementById('tbody1');tb.innerHTML='';
             d1.forEach((r,i)=>{
@@ -498,7 +458,7 @@
             });
         }
 
-        // --- Gantt Chart Logic (Untouched Logic, new HTML structure for icon) ---
+        // --- [修改 3] 甘特圖產生邏輯更新：使用 rowspan 實現真正的合併儲存格 ---
         function renderGantt() {
             const h = document.getElementById('ganttHeader');
             h.innerHTML = '<th class="col-fix-name">班期 / 活動名稱</th>';
@@ -531,20 +491,31 @@
                 let sum = Array(32).fill(0);
 
                 grp[m].forEach(r => {
-                    let vis = `<tr class="gantt-visual-row"><td class="col-fix-name" style="border-right:1px solid #333;border-bottom:none;"></td>`;
-                    let dat = `<tr class="gantt-data-row"><td class="col-fix-name" style="padding-left:10px;border-top:none;" title="${r.n}">${r.n}</td>`;
+                    // 第 1 列：包含合併的名稱欄位 (rowspan=2) + 藍色 Bar 區域
+                    let row1 = `<tr class="gantt-visual-row">
+                        <td class="col-fix-name" rowspan="2">${r.n}</td>`;
+                    
+                    // 第 2 列：只包含數字區域 (名稱欄位因 rowspan 而跳過)
+                    let row2 = `<tr class="gantt-data-row">`;
+
                     for(let i=1; i<=31; i++) {
                         let act = r.ds.includes(i), w = new Date(2025, m-1, i).getDay();
                         let wkCls = (w===0||w===6) ? 'weekend' : '';
                         if(act) sum[i] += parseInt(r.v);
                         
-                        vis += `<td class="col-fix-day gantt-cell-bar ${wkCls} ${act?'bar-active':''}"></td>`;
+                        // 產生上方 Bar
+                        row1 += `<td class="col-fix-day gantt-cell-bar ${wkCls} ${act?'bar-active':''}"></td>`;
+                        
+                        // 產生下方數字
                         let vShow = (act && parseInt(r.v)>0) ? r.v : '';
-                        dat += `<td class="col-fix-day gantt-num ${wkCls}">${vShow}</td>`;
+                        row2 += `<td class="col-fix-day gantt-num ${wkCls}">${vShow}</td>`;
                     }
-                    html += vis + '</tr>' + dat + '</tr>';
+                    row1 += '</tr>';
+                    row2 += '</tr>';
+                    html += row1 + row2;
                 });
-                let sRow = `<tr class="stats-row"><td class="col-fix-name">每日統計</td>`;
+                
+                let sRow = `<tr class="stats-row"><td class="col-fix-name" style="text-align:center;">每日統計</td>`;
                 for(let i=1; i<=31; i++) sRow += `<td class="col-fix-day">${sum[i]}</td>`;
                 html += sRow + '</tr>';
                 tbody.innerHTML = html;
@@ -576,7 +547,6 @@
             return results;
         }
 
-        // --- Modals & Export Logic ---
         let curEdit=null;
         function openDateModal(t,i) { curEdit={t,i}; let r=(t==1?d1:t==2?d2:d3)[i]; let rawDays = parseDateStr(r.date, []); if(rawDays.length==0) return alert('請先輸入正確日期'); let firstM = rawDays[0].m; let daysInM = rawDays.filter(o=>o.m===firstM).map(o=>o.d); document.getElementById('modalRangeText').innerText = `編輯月份: ${firstM}月 (僅支援首月排除)`; let grid=document.getElementById('calendarGrid'); grid.innerHTML=''; for(let d=1; d<=31; d++){ let btn=document.createElement('div'); btn.className='day-btn'; btn.innerText=d; if(daysInM.includes(d)) { btn.classList.add('active'); if((r.ex||[]).includes(d)) btn.classList.add('excluded'); btn.onclick = ()=> btn.classList.toggle('excluded'); } else btn.classList.add('disabled'); grid.appendChild(btn); } document.getElementById('dateModal').style.display='flex'; }
         function closeModal(id) { document.getElementById(id).style.display='none'; }
