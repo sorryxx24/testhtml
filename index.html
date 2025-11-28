@@ -22,7 +22,7 @@
         
         // ⚠️ 2. 系統整合連結
         const PORTAL_URL = "https://sorryxx24.github.io/Linktest/";
-        const OTHER_SYSTEM_URL = "https://sorryxx18.github.io/justtesthtml/";
+        const OTHER_SYSTEM_URL = " https://sorryxx24.github.io/Facility-Booking-Test/";
         // ==========================================
     </script>
 
@@ -37,7 +37,15 @@
         /* 表格結構設定 */
         table { border-collapse: collapse; font-size: 13px; table-layout: fixed; width: auto; border-spacing: 0; }
         #table1 { min-width: 2000px; } #table2 { min-width: 1800px; } #table3 { min-width: 1400px; }
-        #table4 { width: 1230px !important; } /* 甘特圖寬度 */
+        
+        /* 
+           ===== 修改重點 START ===== 
+           原本設定: width: 1230px !important;
+           修改說明: 改為 width: max-content，讓瀏覽器依照欄位總寬+邊框自動計算寬度，
+                    解決因邊框粗細不同導致的格線錯位問題。
+        */
+        #table4 { width: max-content !important; min-width: 1230px; } 
+        /* ===== 修改重點 END ===== */
 
         /* 表頭與儲存格 */
         th { background-color: #f8fafc; color: #334155; font-weight: 700; border: 1px solid #cbd5e1; position: sticky; top: 0; z-index: 10; height: 45px; padding: 4px; box-sizing: border-box; white-space: nowrap; }
